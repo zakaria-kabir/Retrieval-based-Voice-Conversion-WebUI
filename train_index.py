@@ -104,10 +104,10 @@ def train_index(exp_dir1, version19):
             exp_dir1,
             version19,
         )
-        if os.path.exists(target_path):
+        if os.path.lexists(target_path):
             os.remove(target_path)
 
-        link(added_index_path, target_path)
+        link(os.path.abspath(added_index_path), target_path)
         print(f"Linked index to outside directory: {outside_index_root}")
     except Exception as e:
         print(f"Failed to link index to outside directory: {e}")
