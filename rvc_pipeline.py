@@ -125,8 +125,14 @@ class RVCPipeline:
         self.extract_dataset()
         
         print_step("Starting Training Pipeline")
+        # Explicit thread management to prevent CPU thrashing when running multiple instances
+        default_threads = max(1, os.cpu_count() // len(self.config.get('gpu', '0').split('-')))
+        threads = self.config.get('threads', default_threads)
+        
+        # Limit OpenMP threads so FAISS index training doesn't eat all 80 cores per instance
+        os.environ["OMP_NUM_THREADS"] = str(threads)
+        
         sr_num = int(self.config['sample_rate'].replace('k', '')) * 1000
-        threads = max(1, os.cpu_count())
         logs_dir = os.path.join(self.repo_root, f"logs/{self.model_name}")
         os.makedirs(logs_dir, exist_ok=True)
         dataset_path = os.path.join(self.dataset_dir, self.model_name)
