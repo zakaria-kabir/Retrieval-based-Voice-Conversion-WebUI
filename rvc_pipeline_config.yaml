@@ -1,0 +1,51 @@
+# ─── Paths ───
+rvc_repo_root: "/home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/rvc_reference_audio/Retrieval-based-Voice-Conversion-WebUI"
+backup_root: "/home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/rvc_reference_audio/rvc_backups"
+
+# ─── Dataset ───
+dataset_tar: "/home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/rvc_reference_audio/sp001.tar.xz"
+dataset_extract_dir: "/home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/rvc_reference_audio/dataset"
+
+# ─── Training ───
+model_name: "sp001"
+sample_rate: "48k"           # 32k | 40k | 48k
+f0_method: "rmvpe"           # rmvpe | harvest | dio | pm | crepe | rmvpe_gpu
+gpu: "0"                     # GPU id(s), use "-" for multi-GPU e.g. "0-1"
+batch_size: 16
+total_epoch: 300
+save_every: 20
+version: "v2"                # v1 | v2
+use_f0: true
+cache_data_in_gpu: false
+save_latest_only: false      # true = overwrite G/D checkpoints each save
+save_every_weights: true     # save inference weights at each save_every epoch
+speaker_id: 0
+preprocess_per: 3.7          # preprocess split duration (from config.py)
+no_parallel: false           # disable parallel preprocessing
+
+# ─── Inference ───
+inference:
+  model_weight: ""           # .pth file; auto-detected from backup if empty
+  index_file: ""             # .index file; auto-detected from backup if empty
+  input_audio: ""            # single .wav file or directory of .wav files
+  output_dir: "/home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/rvc_reference_audio/inference_output"
+  output_format: "wav"       # wav | flac | mp3 | ogg | m4a
+
+  # ── Voice conversion parameters (all from WebUI) ──
+  f0_up_key: 0               # pitch shift in semitones (-12 to +12)
+  f0_method: "rmvpe"         # rmvpe | harvest | dio | pm | crepe
+  index_rate: 0.75           # retrieval feature ratio (0.0–1.0)
+  filter_radius: 3           # f0 median filter radius (0–7, >=3 to reduce breathiness)
+  resample_sr: 0             # 0 = no resample; or target sr e.g. 44100
+  rms_mix_rate: 0.25         # volume envelope mix rate (0=input, 1=output)
+  protect: 0.33              # consonant protection (0.0–0.5)
+  f0_file: ""                # optional custom f0 curve file
+
+  # ── Batch randomization (for creating dataset variations) ──
+  randomize_params: false    # if true, randomly vary params per file in batch mode
+  random_ranges:             # ranges for random param generation
+    f0_up_key: [-5, 5]
+    index_rate: [0.4, 0.9]
+    filter_radius: [1, 5]
+    rms_mix_rate: [0.1, 0.5]
+    protect: [0.2, 0.5]

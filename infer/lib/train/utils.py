@@ -435,19 +435,46 @@ def check_git_hash(model_dir):
     else:
         open(path, "w").write(cur_hash)
 
+from logging.handlers import QueueHandler, QueueListener
+import multiprocessing as mp
+
+_log_queue = None
+_log_listener = None
 
 def get_logger(model_dir, filename="train.log"):
-    global logger
+    global logger, _log_queue, _log_listener
     logger = logging.getLogger(os.path.basename(model_dir))
     logger.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter("%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
+    # Avoid adding handlers multiple times
+    if logger.hasHandlers():
+        logger.handlers.clear()
+        
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
-    h = logging.FileHandler(os.path.join(model_dir, filename))
-    h.setLevel(logging.DEBUG)
-    h.setFormatter(formatter)
-    logger.addHandler(h)
+
+    formatter = logging.Formatter("%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
+
+    # Only initialize the queue/listener once in the main process
+    if _log_queue is None:
+        _log_queue = mp.Queue(-1)
+        
+        # Setup handlers for the listener
+        file_handler = logging.FileHandler(os.path.join(model_dir, filename))
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+        
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setLevel(logging.DEBUG)
+        stream_handler.setFormatter(formatter)
+        
+        _log_listener = QueueListener(_log_queue, stream_handler, file_handler, respect_handler_level=True)
+        _log_listener.start()
+
+    # Add the queue handler to the logger
+    queue_handler = QueueHandler(_log_queue)
+    logger.addHandler(queue_handler)
+    
     return logger
 
 
