@@ -24,6 +24,13 @@ import soundfile as sf
 import torch
 import torch.nn.functional as F
 
+try:
+    from torch.serialization import add_safe_globals
+    add_safe_globals([fairseq.data.dictionary.Dictionary])
+except Exception:
+    pass
+
+
 if "privateuseone" not in device:
     device = "cpu"
     if torch.cuda.is_available():
