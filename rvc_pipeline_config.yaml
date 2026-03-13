@@ -22,6 +22,7 @@ save_every_weights: true     # save inference weights at each save_every epoch
 speaker_id: 0
 preprocess_per: 3.7          # preprocess split duration (from config.py)
 no_parallel: false           # disable parallel preprocessing
+threads: 10                  # cpu threads per instance. Lower this if running multiple instances at once (e.g., 10 for 8 instances on 80 core CPU)
 
 # ─── Inference ───
 inference:
