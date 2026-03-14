@@ -238,21 +238,40 @@ class RVCPipeline:
         print(f"Parsing log file: {log_path}")
         
         rows = []
-        pattern = re.compile(
+        loss_pattern = re.compile(
             r".*loss_disc=([\d\.]+),\s*loss_gen=([\d\.]+),\s*loss_fm=([\d\.]+),\s*loss_mel=([\d\.]+),\s*loss_kl=([\d\.]+)"
         )
+        epoch_pattern = re.compile(r"Train Epoch:\s*(\d+).*")
+        step_pattern = re.compile(r"\[(\d+),\s*[\d\.e\-]+\]")
+
+        current_epoch = -1
+        current_step = -1
         
         with open(log_path, "r", encoding="utf-8") as f:
             for ln in f:
-                m = pattern.search(ln)
-                if m:
+                # 1. Match Epoch
+                ep_m = epoch_pattern.search(ln)
+                if ep_m:
+                    current_epoch = int(ep_m.group(1))
+                    continue
+                    
+                # 2. Match Step
+                st_m = step_pattern.search(ln)
+                if st_m:
+                    current_step = int(st_m.group(1))
+                    continue
+                    
+                # 3. Match Losses and save record
+                loss_m = loss_pattern.search(ln)
+                if loss_m and current_epoch != -1 and current_step != -1:
                     rows.append({
-                        "step": len(rows),
-                        "loss_disc": float(m.group(1)),
-                        "loss_gen": float(m.group(2)),
-                        "loss_fm": float(m.group(3)),
-                        "loss_mel": float(m.group(4)),
-                        "loss_kl": float(m.group(5)),
+                        "epoch": current_epoch,
+                        "global_step": current_step,
+                        "loss_disc": float(loss_m.group(1)),
+                        "loss_gen": float(loss_m.group(2)),
+                        "loss_fm": float(loss_m.group(3)),
+                        "loss_mel": float(loss_m.group(4)),
+                        "loss_kl": float(loss_m.group(5)),
                     })
                     
         if not rows:
@@ -290,30 +309,30 @@ class RVCPipeline:
         
         print("\n🏆 Top 3 Best Candidates (by composite score):")
         for i, c in enumerate(best_candidates):
-            print(f"  #{i+1} : step {c['step']} | composite={c['composite_score']:.4f} | mel={c['loss_mel']:.4f} | fm={c['loss_fm']:.4f}")
+            print(f"  #{i+1} : Epoch {c['epoch']} (Step {c['global_step']}) | composite={c['composite_score']:.4f} | mel={c['loss_mel']:.4f} | fm={c['loss_fm']:.4f}")
             
         # Plotting
         try:
             fig, axs = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
             
-            axs[0].plot(df['step'], df['loss_mel'], label='loss_mel', color='blue')
-            axs[0].plot(df['step'], df['loss_fm'], label='loss_fm', color='cyan')
+            axs[0].plot(df['epoch'], df['loss_mel'], label='loss_mel', color='blue')
+            axs[0].plot(df['epoch'], df['loss_fm'], label='loss_fm', color='cyan')
             axs[0].set_title('Spectral Quality')
             axs[0].legend()
             axs[0].grid(True)
             
-            axs[1].plot(df['step'], df['loss_gen'], label='loss_gen', color='green')
-            axs[1].plot(df['step'], df['loss_disc'], label='loss_disc', color='red')
+            axs[1].plot(df['epoch'], df['loss_gen'], label='loss_gen', color='green')
+            axs[1].plot(df['epoch'], df['loss_disc'], label='loss_disc', color='red')
             axs[1].set_title('Adversarial Balance')
             axs[1].legend()
             axs[1].grid(True)
             
-            axs[2].plot(df['step'], df['loss_kl'], label='loss_kl', color='purple')
+            axs[2].plot(df['epoch'], df['loss_kl'], label='loss_kl', color='purple')
             axs[2].set_title('Latent Divergence')
             axs[2].legend()
             axs[2].grid(True)
             
-            plt.xlabel('Step')
+            plt.xlabel('Epoch')
             plt.tight_layout()
             
             plot_path = os.path.join(backup_dir, "training_metrics.png")

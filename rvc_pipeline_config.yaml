@@ -13,11 +13,11 @@ f0_method: "rmvpe"           # rmvpe | harvest | dio | pm | crepe | rmvpe_gpu
 gpu: "0"                     # GPU id(s), use "-" for multi-GPU e.g. "0-1"
 batch_size: 16
 total_epoch: 300
-save_every: 20
+save_every: 10
 version: "v2"                # v1 | v2
 use_f0: true
 cache_data_in_gpu: false
-save_latest_only: false      # true = overwrite G/D checkpoints each save
+save_latest_only: true       # true = overwrite G/D checkpoints each save
 save_every_weights: true     # save inference weights at each save_every epoch
 speaker_id: 0
 preprocess_per: 3.7          # preprocess split duration (from config.py)
