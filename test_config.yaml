@@ -1,0 +1,18 @@
+rvc_repo_root: /home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/rvc_reference_audio/Retrieval-based-Voice-Conversion-WebUI
+backup_root: /tmp
+model_name: sp001
+gpu: "0"
+inference:
+  input_audio: /home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/data_advanced/noise-reduced_audio/train/barisal/bar_train_0237_nr_na.wav
+  model_weight: sp001_e250_s8500.pth
+  index_file: assets/indices/added_IVF2337_Flat_nprobe_1_sp001_v2.index
+  output_dir: /tmp/rvc_test_out
+  output_format: wav
+  f0_up_key: 0
+  f0_method: rmvpe
+  index_rate: 0.75
+  filter_radius: 3
+  resample_sr: 0
+  rms_mix_rate: 0.25
+  protect: 0.33
+  randomize_params: false

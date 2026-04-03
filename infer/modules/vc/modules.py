@@ -100,7 +100,7 @@ class VC:
         person = f'{os.getenv("weight_root")}/{sid}'
         logger.info(f"Loading: {person}")
 
-        self.cpt = torch.load(person, map_location="cpu")
+        self.cpt = torch.load(person, map_location="cpu", weights_only=False)
         self.tgt_sr = self.cpt["config"][-1]
         self.cpt["config"][-3] = self.cpt["weight"]["emb_g.weight"].shape[0]  # n_spk
         self.if_f0 = self.cpt.get("f0", 1)
@@ -163,6 +163,11 @@ class VC:
         f0_up_key = int(f0_up_key)
         try:
             audio = load_audio(input_audio_path, 16000)
+            # Pad to multiple of 160 to avoid RVC frame truncation
+            original_len = len(audio)
+            if original_len % 160 != 0:
+                audio = np.pad(audio, (0, 160 - (original_len % 160)), mode="constant")
+
             audio_max = np.abs(audio).max() / 0.95
             if audio_max > 1:
                 audio /= audio_max
@@ -209,6 +214,20 @@ class VC:
                 tgt_sr = resample_sr
             else:
                 tgt_sr = self.tgt_sr
+
+            # Force exact 1:1 duration mapping back to source length
+            if tgt_sr >= 16000:
+                final_cnt = int(original_len * (tgt_sr / 16000))
+                if len(audio_opt) < final_cnt:
+                    audio_opt = np.pad(audio_opt, (0, final_cnt - len(audio_opt)), mode="constant")
+                else:
+                    audio_opt = audio_opt[:final_cnt]
+
+            # Precisely crop output to match original input duration
+            if tgt_sr >= 16000:
+                final_cnt = int(original_len * (tgt_sr / 16000))
+                audio_opt = audio_opt[:final_cnt]
+
             index_info = (
                 "Index:\n%s." % file_index
                 if os.path.exists(file_index)
