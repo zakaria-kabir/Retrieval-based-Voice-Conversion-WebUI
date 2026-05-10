@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
 import argparse
-import yaml
-import sys
-import os
-import subprocess
-import shutil
-import tarfile
-import json
-import re
 import csv
+import json
+import os
+import random
+import re
+import shutil
+import subprocess
+import sys
+import tarfile
 import time
-from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from tqdm import tqdm
+from pathlib import Path
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
-import random
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import pandas as pd
+import torch
+import yaml
+from tqdm import tqdm
+
+# ============ GPU Memory Optimization ============
+# Enable expandable memory segments to reduce fragmentation
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+torch.cuda.empty_cache()
 
 
 def load_config(config_path):
@@ -28,9 +34,9 @@ def load_config(config_path):
 
 
 def print_step(message):
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"🚀 {message}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 def run_command(cmd, cwd=None, capture_stdout=None):
@@ -330,7 +336,7 @@ class RVCPipeline:
         print("\n🏆 Top 3 Best Candidates (by composite score):")
         for i, c in enumerate(best_candidates):
             print(
-                f"  #{i+1} : Epoch {c['epoch']} (Step {c['global_step']}) | composite={c['composite_score']:.4f} | mel={c['loss_mel']:.4f} | fm={c['loss_fm']:.4f}"
+                f"  #{i + 1} : Epoch {c['epoch']} (Step {c['global_step']}) | composite={c['composite_score']:.4f} | mel={c['loss_mel']:.4f} | fm={c['loss_fm']:.4f}"
             )
 
         # Plotting
@@ -506,16 +512,16 @@ class RVCPipeline:
                 sys.exit(1)
 
         # Resolve paths
-        from argparse import Namespace
-
         # Shield sys.argv from RVC WebUI's internal argparse
         import sys
+        from argparse import Namespace
 
         old_argv = sys.argv
         sys.argv = [old_argv[0]]
-        from infer.modules.vc.modules import VC
-        from configs.config import Config as RVCConfig
         import glob
+
+        from configs.config import Config as RVCConfig
+        from infer.modules.vc.modules import VC
 
         # Temporarily change dir to repo root so things load cleanly
         original_cwd = os.getcwd()
@@ -627,6 +633,9 @@ class RVCPipeline:
             # Use a slightly quieter logging for parallel tasks
             # print(f"Processing: {os.path.basename(f_in)}")
 
+            # Clear GPU cache before processing to prevent fragmentation
+            torch.cuda.empty_cache()
+
             info = vc.vc_single(
                 1,  # sid (not used directly if model loaded)
                 f_in,
@@ -646,13 +655,14 @@ class RVCPipeline:
             fmt = inf_config["output_format"]
             out_file = os.path.join(
                 out_dir,
-                f"{os.path.basename(f_in).rsplit('.',1)[0]}_rvc_{self.model_name}.{fmt}",
+                f"{os.path.basename(f_in).rsplit('.', 1)[0]}_rvc_{self.model_name}.{fmt}",
             )
 
             msg, audio_opt = info
             if "Success" in msg and audio_opt[0] is not None:
-                import soundfile as sf
                 from io import BytesIO
+
+                import soundfile as sf
                 from infer.lib.audio import wav2
 
                 tgt_sr, data = audio_opt
@@ -704,6 +714,8 @@ class RVCPipeline:
             pd.DataFrame(batch_log_rows).to_csv(csv_path, index=False)
             print(f"✅ Batch inference log saved to: {csv_path}")
 
+        # Final cleanup
+        torch.cuda.empty_cache()
         os.chdir(original_cwd)
 
 
