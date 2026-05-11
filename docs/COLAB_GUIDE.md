@@ -11,20 +11,24 @@ an L4 GPU, your dataset tarballs on Google Drive, and your custom
 Before opening Colab:
 
 1. **Push latest repo changes** to GitHub from your local machine:
+
    ```bash
    cd BengDiDa_preparation/rvc_reference_audio/Retrieval-based-Voice-Conversion-WebUI
    git add -A
    git commit -m "update pipeline"
    git push origin main
    ```
+
    The Colab notebook clones from `github.com/zakaria-kabir/Retrieval-based-Voice-Conversion-WebUI`.
 
 2. **Upload dataset tarballs** to Google Drive at a path like:
+
    ```
    MyDrive/RVC_Datasets/sp021.tar.xz
    MyDrive/RVC_Datasets/sp022.tar.xz
    ...
    ```
+
    The tarball must extract to a folder **named exactly the same as `model_name`**
    (e.g., `sp021.tar.xz` → extracts to `sp021/`).
 
@@ -289,7 +293,7 @@ Colab sessions can disconnect. The pipeline handles this gracefully:
 1. Rerun **Cells 1–6** (setup).
 2. Rerun **Cell 7** only if `/content/dataset/{SPEAKER_ID}/` was deleted.
 3. **Do NOT rerun Cell 9 from scratch** — instead, run the individual
-   stages manually. The RVC train script auto-detects the latest G_/D_
+   stages manually. The RVC train script auto-detects the latest G*/D*
    checkpoint and resumes:
 
 ```python
@@ -377,13 +381,13 @@ for spk in SPEAKERS:
 
 ## L4 vs Local RTX 5060 — Setting Differences
 
-| Setting              | Local RTX 5060 (8GB) | Colab L4 (24GB) |
-|----------------------|----------------------|-----------------|
-| `batch_size`         | 8                    | **32–40**       |
-| `cache_data_in_gpu`  | false                | **true**        |
-| `f0_method`          | rmvpe                | **rmvpe_gpu**   |
-| `save_latest_only`   | true                 | **false**       |
-| `threads`            | 8                    | `os.cpu_count()`|
+| Setting                   | Local RTX 5060 (8GB)     | Colab L4 (24GB)          |
+| ------------------------- | ------------------------ | ------------------------ |
+| `batch_size`              | 8                        | **32–40**                |
+| `cache_data_in_gpu`       | false                    | **true**                 |
+| `f0_method`               | rmvpe                    | **rmvpe_gpu**            |
+| `save_latest_only`        | true                     | **false**                |
+| `threads`                 | 8                        | `os.cpu_count()`         |
 | `PYTORCH_CUDA_ALLOC_CONF` | expandable_segments:True | expandable_segments:True |
 
 ---
@@ -412,20 +416,25 @@ MyDrive/RVC_Backups/
 ## Common Issues
 
 ### OOM during training
+
 - Lower `batch_size` to 24 or 16.
 - Set `cache_data_in_gpu: false`.
 - Add to the cell before training: `os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"`
 
 ### "Repo not found" preflight error
+
 - Rerun Cell 3 (clone) — the session may have reset.
 
 ### f0 extraction hangs with `rmvpe_gpu`
+
 - Switch `f0_method` to `rmvpe` (CPU) in the config — more stable on some Colab runtimes.
 
 ### Drive copy is slow
+
 - Make sure you are using `rsync` not `shutil.copy` — rsync resumes partial transfers.
 
 ### Training doesn't resume after disconnect
-- The G_/D_ checkpoints must exist in `/content/Retrieval-based-Voice-Conversion-WebUI/logs/{SPEAKER_ID}/`.
+
+- The G*/D* checkpoints must exist in `/content/Retrieval-based-Voice-Conversion-WebUI/logs/{SPEAKER_ID}/`.
 - Run the restore cell first: `python rvc_pipeline.py --config ... restore`
 - Then rerun just the training subprocess (Cell in "Resuming" section above).

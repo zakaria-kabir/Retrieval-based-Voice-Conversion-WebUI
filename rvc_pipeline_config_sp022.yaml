@@ -6,12 +6,12 @@ backup_root: "/home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/BengDiDa_prepa\
 
 # ─── Dataset ───
 dataset_tar: "/home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/BengDiDa_prepa\
-  ration/rvc_reference_audio/downloads/final_tars/sp021.tar.xz" ################## remember to update this tar path for each speaker
+  ration/rvc_reference_audio/downloads/final_tars/sp022.tar.xz" ################## remember to update this tar path for each speaker
 dataset_extract_dir: "/home/zakaria/PersonalWork/Dialect_CLF_wav2vec2_v2/BengDi\
   Da_preparation/rvc_reference_audio/dataset"
 
 # ─── Training ───
-model_name: "sp021" ########### model name for saving/loading checkpoints; also used to auto-detect dataset subdir"
+model_name: "sp022" ########### model name for saving/loading checkpoints; also used to auto-detect dataset subdir"
 sample_rate: "48k" # 32k | 40k | 48k
 f0_method: "rmvpe" # rmvpe | harvest | dio | pm | crepe | rmvpe_gpu
 gpu: "0" # GPU id(s), use "-" for multi-GPU e.g. "0-1"

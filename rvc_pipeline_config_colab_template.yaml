@@ -11,37 +11,37 @@
 
 # ─── Paths (Colab fixed paths — do not change) ───
 rvc_repo_root: "/content/Retrieval-based-Voice-Conversion-WebUI"
-backup_root: "/content/drive/MyDrive/RVC_Backups"   # ← your Drive backup root
+backup_root: "/content/drive/MyDrive/RVC_Backups" # ← your Drive backup root
 
 # ─── Dataset ─────────────────────────────────────────────
 # Path to the .tar.xz on Google Drive (rsync'd to /content/dataset/ before training)
-dataset_tar: "/content/dataset/sp001.tar.xz"          # ← SET THIS per speaker
+dataset_tar: "/content/dataset/sp001.tar.xz" # ← SET THIS per speaker
 dataset_extract_dir: "/content/dataset"
 
 # ─── SPEAKER-SPECIFIC — EDIT THESE ──────────────────────
-model_name: "sp001"        # ← SET THIS: speaker id (must match tar folder name)
-speaker_id: 0              # ← SET THIS: integer id in filelist (usually 0)
+model_name: "sp001" # ← SET THIS: speaker id (must match tar folder name)
+speaker_id: 0 # ← SET THIS: integer id in filelist (usually 0)
 
 # ─── Training ─────────────────────────────────────────────
-sample_rate: "48k"                # 32k | 40k | 48k
-f0_method: "rmvpe_gpu"            # L4: use rmvpe_gpu for 3-5x faster f0 extraction
+sample_rate: "48k" # 32k | 40k | 48k
+f0_method: "rmvpe_gpu" # L4: use rmvpe_gpu for 3-5x faster f0 extraction
 gpu: "0"
-batch_size: 32                    # L4 24GB: 32 is safe; try 40 if no OOM
+batch_size: 32 # L4 24GB: 32 is safe; try 40 if no OOM
 total_epoch: 300
 save_every: 20
 version: "v2"
 use_f0: true
-cache_data_in_gpu: true           # L4 24GB VRAM: cache dataset in GPU for speed
-save_latest_only: false           # false = keep all checkpoints (Drive has space)
-save_every_weights: true          # save inference .pth at each checkpoint
+cache_data_in_gpu: true # L4 24GB VRAM: cache dataset in GPU for speed
+save_latest_only: false # false = keep all checkpoints (Drive has space)
+save_every_weights: true # save inference .pth at each checkpoint
 preprocess_per: 3.7
 no_parallel: false
-threads: 4                        # Colab L4 typically has 4-8 vCPUs
+threads: 4 # Colab L4 typically has 4-8 vCPUs
 
 # ─── Inference ────────────────────────────────────────────
 inference:
-  model_weight: ""                # auto-detected from backup if empty
-  index_file: ""                  # auto-detected from backup if empty
+  model_weight: "" # auto-detected from backup if empty
+  index_file: "" # auto-detected from backup if empty
   input_audio: ""
   output_dir: "/content/inference_output"
   output_format: "wav"
